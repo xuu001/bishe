@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.hhang.boot.dao.DataDao">
+    <select id="findReport" resultType="map">
+        select
+            count(if(a.isDel = '0',1,null)) 'total',
+            count(distinct r.accountId) 'report',
+            count(if(r.quarantine != '0',1,null)) 'quarantine'
+        from  account a
+        left join report r on r.accountId = a.id
+        and r.`time` between concat(curdate() ,' 00:00:00') and concat(curdate() ,' 23:59:59')
+    </select>
+    <select id="findCompany" resultType="map">
+
+    </select>
+    <select id="findById" resultType="map">
+
+    </select>
+    <insert id="saveCompany" useGeneratedKeys="true" keyProperty="id">
+
+    </insert>
+    <insert id="saveAccount" useGeneratedKeys="true" keyProperty="id">
+
+    </insert>
+
+    <insert id="saveRoleAccount" useGeneratedKeys="true" keyProperty="id">
+
+    </insert>
+
+    <update id="update">
+
+    </update>
+
+    <update id="upStatus">
+
+    </update>
+
+</mapper>

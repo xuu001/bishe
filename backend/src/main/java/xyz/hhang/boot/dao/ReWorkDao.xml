@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.hhang.boot.dao.ReWorkDao">
+    <insert id="save">
+        insert into
+            eepc.return_work (accountId,
+                              createUserName,
+                              createDate,
+                              quarantine,
+                              status,
+                              returnPlace,
+                              nucleicAcid,
+                              file,
+                              remakes,
+                              version,
+                              returnDate)
+        values(#{accountId},
+               #{createUserName},
+               now(),
+               #{quarantine},
+               0,
+               #{returnPlace},
+               #{nucleicAcid},
+               #{file},
+               #{remakes},
+               0,
+               #{returnDate});
+    </insert>
+    <update id="update">
+        update
+            eepc.return_work
+        set
+            returnDate = now(),
+            status = #{status},
+	version = #{version} +1
+        where id = #{id} and version = #{version}
+
+    </update>
+    <delete id="delete">
+        delete from ytd.cus_level where id in
+        <foreach collection="collection" item="id" separator="," close=")" open="(">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <select id="findByCus" resultType="java.util.Map">
+        select
+            rw.id,
+            rw.accountId,
+            rw.createUserName name,
+        date_format(rw.createDate, '%Y-%m-%d') as createDate,
+            rw.quarantine,
+            rw.status,
+            rw.returnPlace,
+            rw.nucleicAcid,
+            file,
+            remakes,
+            rw.version,
+        date_format(rw.returnDate, '%Y-%m-%d %H:%i:%S') as returnDate,
+            department
+        from
+            eepc.return_work rw
+                join depa_acc da on da.accountId = rw.accountId
+                join department d on d.id =da.departmentId
+        <where>
+            <if test="id != null and id != ''">
+                and rw.accountId = #{id}
+            </if>
+            <if test="department != null and department != ''">
+                and department = concat(#{ department })
+            </if>
+            <if test="name !=null and name !=''">
+                and rw.createUserName like concat('%', #{ name },'%')
+            </if>
+            <if test="data != null and data != ''">
+                and rw.createDate > concat(#{data}, ' 00:00:00')
+            </if>
+            <if test="data != null and data != ''">
+                <![CDATA[
+			and rw.createDate < concat(#{data}, ' 23:59:59')
+			]]>
+            </if>
+        </where>
+        order by createDate desc
+    </select>
+</mapper>

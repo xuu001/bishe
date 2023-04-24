@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.hhang.boot.dao.CompanyDao">
+
+    <select id="findDepartment" resultType="java.util.Map">
+        SELECT id, department, count, createDate, createUserId, createUserName,code
+        FROM eepc.department;
+    </select>
+
+
+    <insert id="save">
+        insert into eepc.department (department, createDate, createUserId, createUserName,count,
+                                      modifyDate, version,code)
+        values (#{department}, now(),#{createUserId}, #{createUserName}, 0 , #{modifyDate}, 0,#{code})
+    </insert>
+    <update id="update">
+        update eepc.account
+        set isDel= 1,
+            modifyDate = now(),
+            version= version + 1
+        where id = #{id}
+    </update>
+    <delete id="delete">
+        delete from eepc.department where id in
+        <foreach collection="collection" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

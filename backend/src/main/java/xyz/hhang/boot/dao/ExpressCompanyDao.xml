@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.hhang.boot.dao.ExpressCompanyDao">
+
+    <select id="findByexpress" resultType="java.util.Map">
+        select
+        id,
+        name,
+        createDate ,
+        createUserId,
+        createUserName,
+        modifyDate,
+        modifyUserId,
+        modifyUserName,
+        isDel,
+        version
+        from ytd.express_company
+        <where>
+            <if test="name != null and name != ''">
+                and name like concat('%',#{name} ,'%')
+            </if>
+
+            <if test="startDate != null and startDate != ''">
+                and createDate > #{startDate}
+            </if>
+
+            <if test="endDate != null and endDate != ''">
+                <![CDATA[
+			and createDate <#{endDate}
+		]]>
+            </if>
+
+        </where>
+
+    </select>
+
+    <insert id="save">
+        insert into ytd.express_company(name,
+                                        createDate,
+                                        createUserId,
+                                        createUserName,
+                                        modifyDate,
+                                        modifyUserId,
+                                        modifyUserName,
+                                        isDel,
+                                        version)
+        VALUES (#{name},
+                now(),
+                #{createUserId},
+                #{createUserName},
+                now(),
+                #{modifyUserId},
+                #{modifyUserName},
+                0, 0)
+    </insert>
+
+    <update id="update">
+        update ytd.express_company
+        set name=#{name},
+            createDate=now(),
+            createUserId=#{createUserId},
+            createUserName=#{createUserName},
+            modifyDate=now(),
+            modifyUserId=#{modifyUserId},
+            modifyUserName=#{modifyUserName},
+            version=version + 1
+        where id = #{id}
+          and version = #{version}
+    </update>
+
+    <delete id="delete">
+        delete from ytd.express_company
+        where id in
+        <foreach collection="collection" item="id" separator="," close=")" open="(">
+            #{id}
+        </foreach>
+    </delete>
+
+
+</mapper>
+

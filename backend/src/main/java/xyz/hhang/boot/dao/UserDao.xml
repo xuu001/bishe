@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.hhang.boot.dao.UserDao">
+    <select id="findByAcc" resultType="map">
+        select a.id,
+               account,  password,
+               name,     status,
+               a.createDate,
+               a.createName,
+               a.modifyDate,
+               modifyName, isDel,
+               a.version,
+               gender,    age,
+               address,   phone,
+               mail,      department
+        from eepc.account a
+                 left join depa_acc da on da.accountId = a.id
+                 left join department de on de.id = da.departmentId
+        where account = #{account} and isDel = 0
+    </select>
+    <select id="findMenu" resultType="map">
+        select a.id,icon ,a.pid ,a.`type` ,url ,`text`
+        from eepc.authority a
+                 join auth_role aur on aur.authId = a.id
+                 join `role` r on r.id = aur.roleId
+                 join acc_role ar on r.id = ar.roleId
+                 join account acc on acc.id = ar.accountId
+        where acc.account = #{account}
+    </select>
+
+    <select id="findUser" resultType="map">
+        select
+        a.id, account,
+        name, status,
+        date_format(a.createDate, '%Y-%m-%d') as createDate,
+        createName,
+        date_format(a.modifyDate, '%Y-%m-%d') as modifyDate,
+        a.modifyName,
+        a.isDel, a.version,
+        gender, da.departmentId,
+        address, phone,
+        isAdmin, mail,
+        d.department
+        from
+        eepc.account a
+        left join depa_acc da on da.accountId = a.id
+        left join department d on d.id =da.departmentId
+        <where>
+                and isDel = 0
+            <if test="department !=null and department !=''">
+                and department like concat('%',#{department},'%')
+            </if>
+            <if test="account !=null and account !=''">
+                and account like #{account}
+            </if>
+            <if test="name != null and name != ''">
+                and a.name like concat('%', #{name}, '%' )
+            </if>
+            <if test="data != null and data != ''">
+                and a.createDate > concat(#{data}, ' 00:00:00')
+            </if>
+            <if test="data != null and data != ''">
+                <![CDATA[
+			and a.createDate < concat(#{data}, ' 23:59:59')
+			]]>
+            </if>
+        </where>
+    </select>
+    <!-- 记录 useGeneratedKeys =true 这个表示插入数据之后返回一个自增的主键id给你对应实体类中的主键属性。 -->
+    <!-- 此时可以直接得到插入的新增员工id 不需要前端再去查询 返回给serviceImpl里的saveUser()方法的形参user中并将里的id替换成为该值  -->
+    <!-- 后续一个serviceImpl调用多个Dao 需要注意insert的返回值!!!(本次一个serviceImpl调用四个dao)-->
+    <insert id="saveUser" useGeneratedKeys="true" keyProperty="id">
+        insert into
+            eepc.account (account,
+                          password,
+                          name,
+                          status,
+                          createDate,
+                          createName,
+                          isDel,
+                          version,
+                          isAdmin)
+        values(#{account},
+               #{password},
+               #{name},
+               1,
+               now(),
+               #{createUserName},
+               0,
+               0,
+               0);
+    </insert>
+    <!--  新增员工时同时分配部门 往部门关联表里插入关联信息  -->
+    <insert id="saveDep_acc" useGeneratedKeys="false" keyProperty="id">
+        insert
+        into
+            eepc.depa_acc (departmentId,
+                           accountId,
+                           createDate)
+        values(#{departmentId} ,
+               #{id} ,
+               now());
+    </insert>
+    <!-- 新增员工时同时分配权限 往权限关联表里插入关联信息 -->
+    <insert id="saveRole">
+        insert
+        into
+            eepc.acc_role (accountId,
+                           roleId,
+                           createDate,
+                           createUserId,
+                           createUserName)
+        values(#{id},
+               3,
+               now(),
+               #{createUserId},
+               #{createUserName});
+    </insert>
+    <!--  新增员工时同时更新部门表里部门人数记录值 -->
+    <update id="upDepartment">
+        update
+            eepc.department
+        set
+            count = #{count} +1
+            where id = #{departmentId};
+    </update>
+
+    <select id="findByAccount" resultType="map">
+        SELECT id, account, hiredDate, createDate, modifyUserName, isDel, version
+        FROM account
+        where account = #{account}
+    </select>
+
+    <update id="upUser">
+        update
+            account
+        set status  = #{status},
+            isDel   = #{isDel},
+            version = version + 1,
+            modifyDate = now(),
+            modifyName = #{modifyName}
+        where id = #{id}
+          and version = #{version}
+    </update>
+    <delete id="delete">
+        delete from account where id in
+        <foreach collection="collection" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <update id="update">
+        update tab_user
+        set headPhoto=#{headPhoto},
+            headPhotoOriginalName=#{headPhotoOriginalName}
+        where id = #{id}
+    </update>
+
+    <update id="changePass">
+        update tab_user
+        set password=#{password}
+        where mail = #{mail}
+    </update>
+
+</mapper>

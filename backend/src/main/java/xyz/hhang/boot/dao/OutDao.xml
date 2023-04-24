@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.hhang.boot.dao.OutDao">
+    <!-- 申请保存 -->
+    <insert id="save">
+        insert
+        into
+            eepc.go_out (accountId,
+                         destination,
+                         departureTime,
+                         createDate,
+                         createUserName,
+                         transport,
+                         outTime,
+                         remarks,
+                         version,
+                         statue)
+        values(#{accountId},
+               #{destination},
+               #{departureTime},
+               now(),
+               #{createUserName},
+               #{transport},
+               #{outTime},
+               #{remarks},
+               0,
+               0);
+    </insert>
+
+    <!-- 审核 -->
+    <update id="audit">
+        update
+            eepc.go_out
+        set
+            version = #{version} + 1,
+            statue = #{statue},
+            modifyDate = now() ,
+            modifyUserName = #{modifyUserName},
+            reason = #{reason}
+        where
+            id = #{id}
+          and version = #{version};
+    </update>
+
+
+<!-- 查账号、申请时间 -->
+    <select id="getAllList" resultType="java.util.Map">
+        select
+            g.id,
+            g.accountId,
+            destination,
+        date_format(g.createDate, '%Y-%m-%d') as createDate,
+        date_format(departureTime, '%Y-%m-%d') as departureTime,
+            g.createUserName,
+        date_format(g.modifyDate, '%Y-%m-%d') as modifyDate ,
+            g.modifyUserName,
+            transport,
+            outTime,
+            g.remarks,
+            g.version,
+            g.statue,
+            g.reason,
+            a.name,
+            department
+        from
+            eepc.go_out g
+                join account a on g.accountId = a.id
+                join depa_acc da on da.accountId =a.id
+                join department d on da.departmentId = d.id
+        <where>
+            <if test="accountId!= null and accountId != ''">
+                and g.accountId = #{id}
+            </if>
+            <if test="department != null and department != ''">
+                and department = concat(#{ department })
+            </if>
+            <if test="name !=null and name !=''">
+                and name like concat('%', #{ name },'%')
+            </if>
+            <if test="data != null and data != ''">
+                and g.createDate > concat(#{data}, ' 00:00:00')
+            </if>
+            <if test="data != null and data != ''">
+                <![CDATA[
+			and g.createDate < concat(#{data}, ' 23:59:59')
+			]]>
+            </if>
+        </where>
+        order by createDate desc
+    </select>
+
+
+    <select id="findByro" resultType="map">
+
+    </select>
+
+
+
+</mapper>

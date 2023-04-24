@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.hhang.boot.dao.TripDao">
+    <insert id="save">
+        insert
+        into eepc.trip (destination,
+                        createTime,
+                        departureTime,
+                        accountId,
+                        transport,
+                        arrivalTime,
+                        returnTime,
+                        returnTransport,
+                        isRisk,
+                        version,
+                        remarks,
+                        isDel)
+        values (#{destination},
+                now(),
+                #{departureTime},
+                #{accountId},
+                #{transport},
+                #{arrivalTime},
+                #{returnTime},
+                #{returnTransport},
+                #{isRisk},
+                0,
+                #{remarks},
+                0);
+    </insert>
+    <select id="getList" resultType="map">
+        SELECT id,
+               destination,
+               date_format(departureTime, '%Y-%m-%d') as departureTime,
+               accountId,
+               transport,
+               date_format(arrivalTime, '%Y-%m-%d')   as arrivalTime,
+               date_format(returnTime, '%Y-%m-%d')    as returnTime,
+               returnTransport,
+               isRisk,
+               version,
+               remarks,
+               date_format(createTime, '%Y-%m-%d')    as createTime,
+               date_format(modifyTime, '%Y-%m-%d')    as modifyTime,
+               modifyUser,
+               modifyUserId,
+               isDel
+        FROM eepc.trip
+        where isDel = 0
+          and accountId = #{accountId}
+        order by arrivalTime desc
+    </select>
+    <select id="getAllList" resultType="map">
+        select
+        t.id,
+        destination,
+        date_format(departureTime, '%Y-%m-%d') as departureTime,
+        t.accountId,
+        transport,
+        date_format(arrivalTime,'%Y-%m-%d') as arrivalTime,
+        date_format(returnTime, '%Y-%m-%d') as returnTime,
+        returnTransport,
+        isRisk,
+        t.version,
+        remarks,
+        date_format(createTime, '%Y-%m-%d') as createTime,
+        date_format(modifyTime, '%Y-%m-%d') as modifyTime,
+        modifyUser,
+        modifyUserId,
+        t.isDel,
+        a.name ,
+        a.phone,
+        a.account,
+        d.department
+        from
+        eepc.trip t
+        left join account a on t.accountId = a.id
+        join depa_acc da on da.accountId =a.id
+        join department d on da.departmentId = d.id
+        <where>
+            t.isDel = 0
+            <if test="department != null and department != ''">
+                and department = concat(#{ department })
+            </if>
+            <if test="name !=null and name !=''">
+                and name like concat('%', #{ name },'%')
+            </if>
+            <if test="data != null and data != ''">
+                and departureTime > concat(#{data}, ' 00:00:00')
+            </if>
+            <if test="data != null and data != ''">
+                <![CDATA[
+			and departureTime < concat(#{data}, ' 23:59:59')
+			]]>
+            </if>
+        </where>
+    </select>
+
+
+</mapper>
